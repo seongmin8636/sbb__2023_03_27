@@ -9,6 +9,7 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 
+
 // answer 테이블이 생김
 @Getter
 @Setter
@@ -23,6 +24,7 @@ public class Answer {
     private String content;
 
     private LocalDateTime createDate; // DATETIME
+    private LocalDateTime modifyDate;
 
     @ManyToOne
     @ToString.Exclude // ToString 대상에서 제외
