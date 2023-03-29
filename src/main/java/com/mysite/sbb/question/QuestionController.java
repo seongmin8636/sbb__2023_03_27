@@ -25,8 +25,8 @@ public class QuestionController {
     private final UserService userService;
 
     @GetMapping("/list")
-    public String list(Model model, @RequestParam(defaultValue = "0") int page) {
-        Page<Question> paging = questionService.getList(page);
+    public String list(Model model, @RequestParam(defaultValue = "0") int page, String kw) {
+        Page<Question> paging = questionService.getList(page, kw);
 
         model.addAttribute("paging", paging);
 
@@ -117,5 +117,16 @@ public class QuestionController {
         questionService.delete(question);
 
         return "redirect:/";
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/vote/{id}")
+    public String questionVote(Principal principal, @PathVariable("id") Integer id) {
+        Question question = questionService.getQuestion(id);
+        SiteUser siteUser = userService.getUser(principal.getName());
+
+        questionService.vote(question, siteUser);
+
+        return "redirect:/question/detail/%d".formatted(id);
     }
 }

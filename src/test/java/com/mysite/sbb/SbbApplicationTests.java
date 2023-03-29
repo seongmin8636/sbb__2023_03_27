@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +69,20 @@ class SbbApplicationTests {
         Question q2 = questionService.create("스프링부트 모델 질문입니다.", "id는 자동으로 생성되나요?", user1);
 
         Answer a1 = answerService.create(q2, "네 자동으로 생성됩니다.", user2);
+
+        // 1번 질문에 2명의 회원이 추천을 한다.
+        // user1 (이)가 q1 (을)를 추천했다.
+        q1.addVoter(user1);
+        q1.addVoter(user2);
+        questionRepository.save(q1);
+
+        q2.addVoter(user1);
+        q2.addVoter(user2);
+        questionRepository.save(q2);
+
+        a1.addVoter(user1);
+        a1.addVoter(user2);
+        answerRepository.save(a1);
     }
 
     @Test
@@ -247,8 +262,50 @@ class SbbApplicationTests {
     }
 
     @Test
-    @DisplayName("대량 테스트 데이터 만들기")
+    @DisplayName("검색, 질문제목으로 검색할 수 있다.")
     void t012() {
+        Page<Question> searchResult = questionService.getList(0, "sbb가 무엇인가요");
+
+        assertEquals(1, searchResult.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("검색, 질문내용으로 검색할 수 있다.")
+    void t013() {
+        Page<Question> searchResult = questionService.getList(0, "sbb에 대해서 알고 싶습니다.");
+
+        assertEquals(1, searchResult.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("검색, 질문자이름으로 검색할 수 있다.")
+    void t014() {
+        Page<Question> searchResult = questionService.getList(0, "user1");
+
+        assertEquals(2, searchResult.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("검색, 답변내용으로 검색할 수 있다.")
+    void t015() {
+        Page<Question> searchResult = questionService.getList(0, "네 자동으로 생성됩니다.");
+
+        assertEquals(2, searchResult.getContent().get(0).getId());
+        assertEquals(1, searchResult.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("검색, 답변자이름으로 검색할 수 있다.")
+    void t016() {
+        Page<Question> searchResult = questionService.getList(0, "user2");
+
+        assertEquals(2, searchResult.getContent().get(0).getId());
+        assertEquals(1, searchResult.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("대량 테스트 데이터 만들기")
+    void t999() {
         SiteUser user2 = userService.getUser("user2");
 
         IntStream.rangeClosed(3, 300).forEach(no -> questionService.create("테스트 제목입니다. %d".formatted(no), "테스트 내용입니다. %d".formatted(no), user2));
